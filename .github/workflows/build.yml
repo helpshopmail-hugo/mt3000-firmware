@@ -10,19 +10,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Zstd Decompressor
+      - name: Install Build Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y zstd tar
+          sudo apt-get install -y zstd tar wget build-essential
 
       - name: Download ImageBuilder
         run: |
-          wget https://downloads.immortalwrt.org/releases/24.10.5/targets/mediatek/filogic/immortalwrt-imagebuilder-24.10.5-mediatek-filogic.Linux-x86_64.tar.zst
+          wget -q https://downloads.immortalwrt.org/releases/24.10.5/targets/mediatek/filogic/immortalwrt-imagebuilder-24.10.5-mediatek-filogic.Linux-x86_64.tar.zst
           unzstd immortalwrt-imagebuilder-*.tar.zst
           tar -xf immortalwrt-imagebuilder-*.tar
           mv immortalwrt-imagebuilder-* imagebuilder
 
-      - name: Inject Optimized Scripts & Configs
+      - name: Inject Custom Optimization Scripts
         run: |
           mkdir -p imagebuilder/files/etc/hotplug.d/net/
           mkdir -p imagebuilder/files/usr/bin/
@@ -45,7 +45,7 @@ jobs:
               fi
           fi
           EOF
-          chmod +x imagebuilder/files/etc/hotplug.d/net/99-usb-tethering
+          chmod 755 imagebuilder/files/etc/hotplug.d/net/99-usb-tethering
 
           # 2. 写入静默中继守护脚本
           cat << 'EOF' > imagebuilder/files/usr/bin/smart_repeater.sh
@@ -66,9 +66,9 @@ jobs:
               wifi reload >/dev/null 2>&1
           fi
           EOF
-          chmod +x imagebuilder/files/usr/bin/smart_repeater.sh
+          chmod 755 imagebuilder/files/usr/bin/smart_repeater.sh
 
-      - name: Build Firmware
+      - name: Build Firmware Image
         run: |
           cd imagebuilder
           make image PROFILE="glinet_gl-mt3000" FILES="files"
@@ -77,4 +77,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MT3000-UBoot-Firmware
-          path: imagebuilder/bin/targets/mediatek/filogic/*gl-mt3000*.bin
+          path: imagebuilder/bin/targets/mediatek/filogic/*.bin
