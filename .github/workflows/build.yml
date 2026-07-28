@@ -10,7 +10,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Zstd Tool
+      - name: Install Tools
         run: sudo apt-get update && sudo apt-get install -y zstd
 
       - name: Download ImageBuilder
@@ -18,6 +18,15 @@ jobs:
           wget https://downloads.immortalwrt.org/releases/24.10.5/targets/mediatek/filogic/immortalwrt-imagebuilder-24.10.5-mediatek-filogic.Linux-x86_64.tar.zst
           tar --zstd -xf immortalwrt-imagebuilder-*.tar.zst
           mv immortalwrt-imagebuilder-* imagebuilder
+
+      - name: Configure Mirror Repos
+        run: |
+          cat << 'EOF' > imagebuilder/repositories.conf
+          src/gz immortalwrt_core https://mirrors.vsean.net/openwrt/releases/24.10.5/targets/mediatek/filogic/packages
+          src/gz immortalwrt_base https://mirrors.vsean.net/openwrt/releases/24.10.5/packages/aarch64_cortex-a53/base
+          src/gz immortalwrt_luci https://mirrors.vsean.net/openwrt/releases/24.10.5/packages/aarch64_cortex-a53/luci
+          src/gz immortalwrt_packages https://mirrors.vsean.net/openwrt/releases/24.10.5/packages/aarch64_cortex-a53/packages
+          EOF
 
       - name: Inject Optimized Scripts & Configs
         run: |
