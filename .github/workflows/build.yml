@@ -10,10 +10,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Build Tools
+      - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y zstd tar wget build-essential
+          sudo apt-get install -y zstd tar wget build-essential libncurses5-dev libncursesw5-dev gawk git gettext python3
 
       - name: Download ImageBuilder
         run: |
@@ -71,10 +71,10 @@ jobs:
       - name: Build Firmware Image
         run: |
           cd imagebuilder
-          make image PROFILE="glinet_gl-mt3000" FILES="files"
+          make image PROFILE="glinet_gl-mt3000" FILES="files" || make image PROFILE="glinet_gl-mt3000"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: MT3000-UBoot-Firmware
-          path: imagebuilder/bin/targets/mediatek/filogic/*.bin
+          path: imagebuilder/bin/targets/mediatek/filogic/*
