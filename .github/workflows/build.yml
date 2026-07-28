@@ -66,9 +66,7 @@ jobs:
       - name: Build Firmware
         run: |
           cd imagebuilder
-          make image PROFILE="glinet_gl-mt3000" \
-            PACKAGES="luci luci-app-passwall xray-core chinadns-ng kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-storage" \
-            FILES="files"
+          make image PROFILE="glinet_gl-mt3000" PACKAGES="luci passwall kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-storage" FILES="files"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
