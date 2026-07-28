@@ -19,13 +19,16 @@ jobs:
           tar --zstd -xf immortalwrt-imagebuilder-*.tar.zst
           mv immortalwrt-imagebuilder-* imagebuilder
 
-      - name: Configure Mirror Repos
+      - name: Configure Exact Router Repos
         run: |
           cat << 'EOF' > imagebuilder/repositories.conf
           src/gz immortalwrt_core https://mirrors.vsean.net/openwrt/releases/24.10.5/targets/mediatek/filogic/packages
           src/gz immortalwrt_base https://mirrors.vsean.net/openwrt/releases/24.10.5/packages/aarch64_cortex-a53/base
+          src/gz immortalwrt_kmods https://mirrors.vsean.net/openwrt/releases/24.10.5/targets/mediatek/filogic/kmods/6.6.122-1-db54f778a3b2b2dcbe4dad7cd73274c0
           src/gz immortalwrt_luci https://mirrors.vsean.net/openwrt/releases/24.10.5/packages/aarch64_cortex-a53/luci
           src/gz immortalwrt_packages https://mirrors.vsean.net/openwrt/releases/24.10.5/packages/aarch64_cortex-a53/packages
+          src/gz immortalwrt_routing https://mirrors.vsean.net/openwrt/releases/24.10.5/packages/aarch64_cortex-a53/routing
+          src/gz immortalwrt_telephony https://mirrors.vsean.net/openwrt/releases/24.10.5/packages/aarch64_cortex-a53/telephony
           EOF
 
       - name: Inject Optimized Scripts & Configs
