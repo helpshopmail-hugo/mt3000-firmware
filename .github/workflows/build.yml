@@ -16,13 +16,17 @@ jobs:
           tar -Jxf immortalwrt-imagebuilder-*.tar.xz
           mv immortalwrt-imagebuilder-* imagebuilder
 
+      - name: Add Third-Party PassWall Repo
+        run: |
+          echo "src/gz passwall_packages https://downloads.immortalwrt.org/releases/packages-24.10/aarch64_cortex-a53/passwall" >> imagebuilder/repositories.conf
+          echo "src/gz passwall_luci https://downloads.immortalwrt.org/releases/packages-24.10/aarch64_cortex-a53/luci" >> imagebuilder/repositories.conf
+
       - name: Inject Optimized Scripts & Configs
         run: |
           mkdir -p imagebuilder/files/etc/hotplug.d/net/
           mkdir -p imagebuilder/files/usr/bin/
-          mkdir -p imagebuilder/files/etc/config/
 
-          # 1. 写入 USB 物理总线硬件追踪守护脚本
+          # 写入 USB 物理总线硬件追踪守护脚本
           cat << 'EOF' > imagebuilder/files/etc/hotplug.d/net/99-usb-tethering
           #!/bin/sh
           DEV_PATH="/sys/devices/platform/soc/11200000.usb"
@@ -42,7 +46,7 @@ jobs:
           EOF
           chmod +x imagebuilder/files/etc/hotplug.d/net/99-usb-tethering
 
-          # 2. 写入静默中继守护脚本
+          # 写入静默中继守护脚本
           cat << 'EOF' > imagebuilder/files/usr/bin/smart_repeater.sh
           #!/bin/sh
           HAS_IP=$(ifconfig phy0-sta0 2>/dev/null | grep "inet addr")
@@ -66,7 +70,7 @@ jobs:
       - name: Build Firmware
         run: |
           cd imagebuilder
-          make image PROFILE="glinet_gl-mt3000" PACKAGES="luci passwall kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-storage" FILES="files"
+          make image PROFILE="glinet_gl-mt3000" PACKAGES="luci luci-app-passwall xray-core kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-storage" FILES="files"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
