@@ -10,18 +10,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install Zstd Tool
+        run: sudo apt-get update && sudo apt-get install -y zstd
+
       - name: Download ImageBuilder
         run: |
-          wget https://downloads.immortalwrt.org/releases/24.10.5/targets/mediatek/filogic/immortalwrt-imagebuilder-24.10.5-mediatek-filogic.Linux-x86_64.tar.xz
-          tar -Jxf immortalwrt-imagebuilder-*.tar.xz
+          wget https://downloads.immortalwrt.org/releases/24.10.5/targets/mediatek/filogic/immortalwrt-imagebuilder-24.10.5-mediatek-filogic.Linux-x86_64.tar.zst
+          tar --zstd -xf immortalwrt-imagebuilder-*.tar.zst
           mv immortalwrt-imagebuilder-* imagebuilder
-
-      - name: Add ImmortalWrt Official Package Feeds
-        run: |
-          echo "src/gz immortalwrt_base https://downloads.immortalwrt.org/releases/packages-24.10/aarch64_cortex-a53/base" >> imagebuilder/repositories.conf
-          echo "src/gz immortalwrt_luci https://downloads.immortalwrt.org/releases/packages-24.10/aarch64_cortex-a53/luci" >> imagebuilder/repositories.conf
-          echo "src/gz immortalwrt_packages https://downloads.immortalwrt.org/releases/packages-24.10/aarch64_cortex-a53/packages" >> imagebuilder/repositories.conf
-          echo "src/gz immortalwrt_passwall https://downloads.immortalwrt.org/releases/packages-24.10/aarch64_cortex-a53/passwall" >> imagebuilder/repositories.conf
 
       - name: Inject Optimized Scripts & Configs
         run: |
