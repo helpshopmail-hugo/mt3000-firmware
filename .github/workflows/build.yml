@@ -19,13 +19,59 @@ jobs:
           tar --zstd -xf immortalwrt-imagebuilder-*.tar.zst
           mv immortalwrt-imagebuilder-* imagebuilder
 
+      - name: Inject Optimized Scripts & Configs
+        run: |
+          mkdir -p imagebuilder/files/etc/hotplug.d/net/
+          mkdir -p imagebuilder/files/usr/bin/
+
+          # 1. 写入 USB 物理总线硬件追踪守护脚本
+          cat << 'EOF' > imagebuilder/files/etc/hotplug.d/net/99-usb-tethering
+          #!/bin/sh
+          DEV_PATH="/sys/devices/platform/soc/11200000.usb"
+          if [ -d "$DEV_PATH" ]; then
+              REAL_USB_IF=$(ls /sys/devices/platform/soc/11200000.usb/usb1/1-1/1-1:1.0/net 2>/dev/null | head -n 1)
+              if [ -n "$REAL_USB_IF" ]; then
+                  CURRENT_DEV=$(uci -q get network.wan2.device)
+                  if [ "$CURRENT_DEV" != "$REAL_USB_IF" ]; then
+                      uci set network.wan2.device="$REAL_USB_IF"
+                      uci commit network
+                  fi
+                  ifconfig $REAL_USB_IF up >/dev/null 2>&1
+                  ifup wan2 >/dev/null 2>&1
+                  udhcpc -i $REAL_USB_IF -n -q >/dev/null 2>&1
+              fi
+          fi
+          EOF
+          chmod +x imagebuilder/files/etc/hotplug.d/net/99-usb-tethering
+
+          # 2. 写入静默中继守护脚本
+          cat << 'EOF' > imagebuilder/files/usr/bin/smart_repeater.sh
+          #!/bin/sh
+          HAS_IP=$(ifconfig phy0-sta0 2>/dev/null | grep "inet addr")
+          if [ -n "$HAS_IP" ]; then exit 0; fi
+          SCAN_2G=$(iw dev phy0-ap0 scan 2>/dev/null | grep SSID)
+          if echo "$SCAN_2G" | grep -q "360WiFi-4BA2F4"; then
+              uci set wireless.sta_auto=wifi-iface
+              uci set wireless.sta_auto.device="radio0"
+              uci set wireless.sta_auto.mode="sta"
+              uci set wireless.sta_auto.network="wwan_wifi"
+              uci set wireless.sta_auto.ssid="360WiFi-4BA2F4"
+              uci set wireless.sta_auto.encryption="psk2"
+              uci set wireless.sta_auto.key="www.110.com"
+              uci set wireless.sta_auto.disabled="0"
+              uci commit wireless
+              wifi reload >/dev/null 2>&1
+          fi
+          EOF
+          chmod +x imagebuilder/files/usr/bin/smart_repeater.sh
+
       - name: Build Firmware
         run: |
           cd imagebuilder
-          make image PROFILE="glinet_gl-mt3000"
+          make image PROFILE="glinet_gl-mt3000" FILES="files"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: MT3000-UBoot-Firmware
-          path: imagebuilder/bin/targets/mediatek/filogic/*.bin
+          path: imagebuilder/bin/targets/mediatek/filogic/*gl-mt3000*.bin
